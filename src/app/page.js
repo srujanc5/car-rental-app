@@ -1,101 +1,204 @@
-import Image from "next/image";
+"use client";
 
-export default function Home() {
+import { useEffect, useState } from "react";
+import {
+  Loader2,
+  ChevronsLeft,
+  ChevronLeft,
+  ChevronRight,
+  ChevronsRight,
+} from "lucide-react";
+import CarCard from "@/components/CarCard";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
+
+const MAKES = ["All", "Maruti", "Hyundai", "Mahindra"];
+const MODELS = {
+  Maruti: ["All", "Alto", "Swift", "Dzire", "Baleno", "Brezza"],
+  Hyundai: ["All", "i10", "i20"],
+  Mahindra: ["All", "Thar"],
+};
+const LOCATIONS = ["Guntur", "Vijayawada"];
+
+export default function HomePage() {
+  const [cars, setCars] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+
+  const [make, setMake] = useState("");
+  const [model, setModel] = useState("");
+  const [location, setLocation] = useState("");
+  const [sort, setSort] = useState("");
+
+  useEffect(() => {
+    async function fetchCars() {
+      setLoading(true);
+      try {
+        const params = new URLSearchParams({
+          page,
+          limit: 6,
+          ...(make && { make }),
+          ...(model && { model }),
+          ...(location && { location }),
+          ...(sort && { sort }),
+        });
+
+        const res = await fetch(`/api/cars?${params.toString()}`);
+        const json = await res.json();
+        setCars(json.data);
+        setTotalPages(json.pagination.totalPages);
+      } catch (error) {
+        console.error("Failed to fetch cars:", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchCars();
+  }, [page, make, model, location, sort]);
+
+  // Reset page when filters change
+  useEffect(() => {
+    setPage(1);
+  }, [make, model, location, sort]);
+
+  const handleMakeChange = (value) => {
+    if (value !== "All"){
+    setMake(value);
+    } else {
+      setMake("")
+    }
+    setModel(""); // reset model when make changes
+  };
+
+  const handleModelChange = (value) => {
+    value === "All" ? setModel("") : setModel(value)
+  }
+
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="https://nextjs.org/icons/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              src/app/page.js
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+    <div className="space-y-6">
+      <h1 className="text-2xl font-semibold">Hop In – Let’s Go!</h1>
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="https://nextjs.org/icons/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+      {/* Filters */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        {/* Make */}
+        <Select value={make} onValueChange={handleMakeChange}>
+          <SelectTrigger className="w-full">
+            <SelectValue placeholder="Select Make" />
+          </SelectTrigger>
+          <SelectContent>
+            {MAKES.map((m) => (
+              <SelectItem key={m} value={m}>
+                {m}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        {/* Model */}
+        <Select
+          value={model}
+          onValueChange={handleModelChange}
+          disabled={!make}
+        >
+          <SelectTrigger className="w-full">
+            <SelectValue placeholder={make ? "Select Model" : "Select Make first"} />
+          </SelectTrigger>
+          <SelectContent>
+            {(MODELS[make] || []).map((m) => (
+              <SelectItem key={m} value={m}>
+                {m}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        {/* Location */}
+        <Select value={location} onValueChange={setLocation}>
+          <SelectTrigger className="w-full">
+            <SelectValue placeholder="Select Location" />
+          </SelectTrigger>
+          <SelectContent>
+            {LOCATIONS.map((loc) => (
+              <SelectItem key={loc} value={loc}>
+                {loc}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        {/* Sort */}
+        <Select value={sort} onValueChange={setSort}>
+          <SelectTrigger className="w-full">
+            <SelectValue placeholder="Sort by" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="price_asc">Price (Low → High)</SelectItem>
+            <SelectItem value="price_desc">Price (High → Low)</SelectItem>
+            <SelectItem value="year_asc">Year (Old → New)</SelectItem>
+            <SelectItem value="year_desc">Year (New → Old)</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* Cars Grid */}
+      {loading ? (
+        <div className="flex justify-center p-8">
+          <Loader2 className="h-8 w-8 animate-spin text-gray-500" />
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {cars.map((car) => (
+            <CarCard key={car._id} car={car} />
+          ))}
+        </div>
+      )}
+
+      {/* Pagination */}
+      <div className="flex justify-center gap-2 pt-4">
+        <Button
+          variant="outline"
+          size="icon"
+          onClick={() => setPage(1)}
+          disabled={page === 1}
         >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
+          <ChevronsLeft className="h-5 w-5" />
+        </Button>
+        <Button
+          variant="outline"
+          size="icon"
+          onClick={() => setPage((prev) => Math.max(prev - 1, 1))}
+          disabled={page === 1}
         >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
+          <ChevronLeft className="h-5 w-5" />
+        </Button>
+        <span className="flex items-center px-3 text-sm">
+          Page {page} of {totalPages}
+        </span>
+        <Button
+          variant="outline"
+          size="icon"
+          onClick={() => setPage((prev) => Math.min(prev + 1, totalPages))}
+          disabled={page === totalPages}
         >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+          <ChevronRight className="h-5 w-5" />
+        </Button>
+        <Button
+          variant="outline"
+          size="icon"
+          onClick={() => setPage(totalPages)}
+          disabled={page === totalPages}
+        >
+          <ChevronsRight className="h-5 w-5" />
+        </Button>
+      </div>
     </div>
   );
 }
