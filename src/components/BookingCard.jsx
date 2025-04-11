@@ -27,6 +27,20 @@ export default function BookingCard({ booking }) {
   const today = new Date();
 
   const days = differenceInCalendarDays(end, start) + 1;
+
+  if (!car) {
+    return (
+      <div className="flex flex-col gap-2 rounded-xl shadow-md border p-4">
+        <h2 className="text-lg font-semibold text-red-600">
+          Car data not available
+        </h2>
+        <p className="text-sm text-muted-foreground">
+          This booking seems to be linked to a deleted or unavailable car.
+        </p>
+      </div>
+    );
+  }
+  
   const total = days * car.pricePerDay;
 
   let status = "Upcoming";
