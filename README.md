@@ -1,6 +1,6 @@
 # 🚗 Car Rental Booking App
 
-A full-stack car rental booking application built using **Next.js 15**, **MongoDB**, **Clerk Authentication**, **Tailwind CSS**, and **Shadcn/UI**. This project showcases a modern, user-friendly interface for browsing, booking, and managing car rentals.
+A full-stack car rental booking application built using **Next.js 14**, **MongoDB**, **Clerk Authentication**, **Tailwind CSS**, and **Shadcn/UI**. This project showcases a modern, user-friendly interface for browsing, booking, and managing car rentals.
 
 ---
 
